@@ -13,7 +13,7 @@ router.get('/', (req, res) => {
       res.send(JSON.parse(fileData));
     })
     .catch(() => {
-      res.status(500).send({ message: '...' });
+      res.status(500).send({ message: 'An error has occurred on  the server' });
     });
 });
 

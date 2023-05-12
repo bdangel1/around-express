@@ -9,7 +9,7 @@ const cardRouter = require('./routes/cards');
 app.use('/users', userRouter);
 app.use('/cards', cardRouter);
 app.use((req, res) => {
-  res.status(404).send({ message: '...' });
+  res.status(404).send({ message: 'The requested resource was not found' });
 });
 
 // listeners
