@@ -1,26 +1,38 @@
 const User = require('../models/usersModel');
+const {
+  DEFAULT_ERROR,
+  NOT_FOUND,
+  BAD_REQUEST,
+  OK,
+} = require('../utils/constance');
 
 const getUsers = async (req, res) => {
   try {
     const users = await User.find({});
     res.send(users);
   } catch (error) {
-    res.status(500).json({ message: 'Error' });
+    res.status(DEFAULT_ERROR).json({ message: 'Error' });
   }
 };
 
 // Get user by ID
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.user_id);
+    const user = await User.findById(req.params.userId);
 
     if (user) {
-      res.status(200).json(user);
+      res.status(OK).json(user);
     } else {
-      res.status(404).json({ message: 'User ID not found' });
+      res.status(NOT_FOUND).json({ message: 'User ID not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving user' });
+    if (error.name === 'CastError') {
+      res
+        .status(BAD_REQUEST)
+        .json({ message: 'No user/card found with that id' });
+    } else {
+      res.status(DEFAULT_ERROR).json({ message: 'Error retrieving user' });
+    }
   }
 };
 
@@ -35,10 +47,10 @@ const createUser = (req, res) => {
   newUser
     .save()
     .then((savedUser) => {
-      res.status(201).json(savedUser);
+      res.status(OK).json(savedUser);
     })
     .catch(() => {
-      res.status(500).json({ message: 'Error creating user' });
+      res.status(DEFAULT_ERROR).json({ message: 'Error creating user' });
     });
 };
 
@@ -48,22 +60,24 @@ const updateProfile = async (req, res) => {
     const newUser = await User.findByIdAndUpdate(
       req.user._id,
       { name, about },
-      { new: true },
+      { new: true, runValidators: true },
     ).orFail(() => {
       const error = new Error('No user/card found with that id');
-      error.statusCode = 400;
+      error.statusCode = NOT_FOUND;
       throw error;
     });
     res.send(newUser);
   } catch (err) {
-    if (err.name === 'ValidationError') {
-      res.status(400).send({
+    if (err.name === 'CastError') {
+      res.status(BAD_REQUEST).send({
         message: 'invalid data passed to the methods for creating a user ',
       });
-    } else if (err.statusCode === 404) {
-      res.status(404).send({ message: 'there is no such user' });
+    } else if (err.statusCode === NOT_FOUND) {
+      res.status(NOT_FOUND).send({ message: 'there is no such user' });
     } else {
-      res.status(500).send({ message: 'An error has occurred on the server.' });
+      res
+        .status(DEFAULT_ERROR)
+        .send({ message: 'An error has occurred on the server.' });
     }
   }
 };
@@ -73,23 +87,25 @@ const updateAvatar = async (req, res) => {
     const newUser = await User.findByIdAndUpdate(
       req.user._id,
       { avatar },
-      { new: true },
+      { new: true, runValidators: true },
     ).orFail(() => {
       const error = new Error('No user/card found with that id');
-      error.statusCode = 400;
+      error.statusCode = BAD_REQUEST;
       throw error;
     });
     res.send(newUser);
   } catch (err) {
-    if (err.name === 'ValidationError') {
-      res.status(400).send({
+    if (err.name === 'CastError') {
+      res.status(BAD_REQUEST).send({
         message:
           'invalid data passed to the methods for updating a user avatar ',
       });
-    } else if (err.statusCode === 404) {
-      res.status(404).send({ message: 'there is no such user' });
+    } else if (err.statusCode === NOT_FOUND) {
+      res.status(NOT_FOUND).send({ message: 'there is no such user' });
     } else {
-      res.status(500).send({ message: 'An error has occurred on the server.' });
+      res
+        .status(DEFAULT_ERROR)
+        .send({ message: 'An error has occurred on the server.' });
     }
   }
 };

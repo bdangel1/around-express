@@ -1,19 +1,18 @@
 const Card = require('../models/cardsModel');
-
+const {
+  DEFAULT_ERROR,
+  NOT_FOUND,
+  OK,
+  BAD_REQUEST,
+} = require('../utils/constance');
 // GET
 const getCards = async (req, res) => {
   try {
-    const cards = await Card.find({ _id: 'dbfe53c3c4d568240378b0c6' }).orFail(
-      () => {
-        const error = new Error('No card found with that id');
-        error.statusCode = 404;
-        throw error;
-      },
-    );
-    res.json(cards);
+    const cards = await Card.find();
+    return res.status(OK).res.json(cards);
   } catch (error) {
-    res
-      .status(500)
+    return res
+      .status(DEFAULT_ERROR)
       .json({ error: 'An error occurred while retrieving the cards.' });
   }
 };
@@ -33,8 +32,13 @@ const createCard = async (req, res) => {
     const savedCard = await card.save();
     return res.status(201).json(savedCard);
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res
+        .status(BAD_REQUEST)
+        .send({ message: 'No user/card found with that id' });
+    }
     return res
-      .status(500)
+      .status(DEFAULT_ERROR)
       .json({ error: 'An error occurred while creating the card.' });
   }
 };
@@ -46,13 +50,18 @@ const deleteCard = async (req, res) => {
   try {
     const deletedCard = await Card.findByIdAndRemove(cardId);
     if (!deletedCard) {
-      return res.status(404).json({ error: 'Card not found.' });
+      return res.status(NOT_FOUND).json({ error: 'Card not found.' });
     }
     return res.json(deletedCard);
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res
+        .status(BAD_REQUEST)
+        .send({ message: 'No user/card found with that id' });
+    }
     return res
-      .status(500)
-      .json({ error: 'An error occurred while deleting the card.' });
+      .status(DEFAULT_ERROR)
+      .json({ error: 'An error occurred while creating the card.' });
   }
 };
 
@@ -65,17 +74,21 @@ const likeCard = async (req, res) => {
       { new: true },
     ).orFail(() => {
       const error = new Error('No user/card found with that id');
-      error.statusCode = 404;
+      error.statusCode = NOT_FOUND;
       throw error;
     });
-    res.send('like was added');
+    res.send({ message: 'like was added' });
   } catch (err) {
-    if (err.statusCode === 404) {
-      res.status(404).send({ message: 'invalid card id' });
+    if (err.statusCode === NOT_FOUND) {
+      res.status(NOT_FOUND).send({ message: 'invalid card id' });
     } else if (err.name === 'CastError') {
-      res.status(404).send({ message: 'invalid card id' });
+      res
+        .status(BAD_REQUEST)
+        .send({ message: 'No user/card found with that id' });
     } else {
-      res.status(500).send({ message: 'An error has occurred on the server.' });
+      res
+        .status(DEFAULT_ERROR)
+        .send({ message: 'An error has occurred on the server.' });
     }
   }
 };
@@ -89,17 +102,21 @@ const dislikeCard = async (req, res) => {
       { new: true },
     ).orFail(() => {
       const error = new Error('No user/card found with that id');
-      error.statusCode = 404;
+      error.statusCode = NOT_FOUND;
       throw error;
     });
-    res.send('like was removed');
+    res.send({ message: 'like was removed' });
   } catch (err) {
-    if (err.statusCode === 404) {
-      res.status(404).send({ message: 'invalid card id' });
+    if (err.statusCode === NOT_FOUND) {
+      res.status(NOT_FOUND).send({ message: 'invalid card id' });
     } else if (err.name === 'CastError') {
-      res.status(404).send({ message: 'invalid card id' });
+      res
+        .status(BAD_REQUEST)
+        .send({ message: 'No user/card found with that id' });
     } else {
-      res.status(500).send({ message: 'An error has occurred on the server.' });
+      res
+        .status(DEFAULT_ERROR)
+        .send({ message: 'An error has occurred on the server.' });
     }
   }
 };
