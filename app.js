@@ -24,16 +24,16 @@ app.use((req, res, next) => {
 
   next();
 });
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use('/users', userRouter);
+app.use('/cards', cardRouter);
 app.use((req, res) => {
   res
     .status(NOT_FOUND)
     .send({ message: 'The requested resource was not found' });
 });
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use('/users', userRouter);
-app.use('/cards', cardRouter);
-
 // listeners
 app.listen(PORT, () => {
   console.log(`App listening at port ${PORT}`);

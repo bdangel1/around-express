@@ -9,7 +9,7 @@ const {
 const getCards = async (req, res) => {
   try {
     const cards = await Card.find();
-    return res.status(OK).res.json(cards);
+    return res.status(OK).json(cards);
   } catch (error) {
     return res
       .status(DEFAULT_ERROR)
@@ -54,7 +54,7 @@ const deleteCard = async (req, res) => {
     }
     return res.json(deletedCard);
   } catch (error) {
-    if (error.name === 'ValidationError') {
+    if (error.name === 'CastError') {
       return res
         .status(BAD_REQUEST)
         .send({ message: 'No user/card found with that id' });

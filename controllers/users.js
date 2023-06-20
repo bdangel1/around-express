@@ -49,8 +49,11 @@ const createUser = (req, res) => {
     .then((savedUser) => {
       res.status(OK).json(savedUser);
     })
-    .catch(() => {
-      res.status(DEFAULT_ERROR).json({ message: 'Error creating user' });
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(BAD_REQUEST).send({ message: 'Invalid data' });
+      }
+      return res.status(DEFAULT_ERROR).json({ message: 'Error creating user' });
     });
 };
 
@@ -68,7 +71,7 @@ const updateProfile = async (req, res) => {
     });
     res.send(newUser);
   } catch (err) {
-    if (err.name === 'CastError') {
+    if (err.name === 'ValidationError') {
       res.status(BAD_REQUEST).send({
         message: 'invalid data passed to the methods for creating a user ',
       });
@@ -90,12 +93,12 @@ const updateAvatar = async (req, res) => {
       { new: true, runValidators: true },
     ).orFail(() => {
       const error = new Error('No user/card found with that id');
-      error.statusCode = BAD_REQUEST;
+      error.statusCode = NOT_FOUND;
       throw error;
     });
     res.send(newUser);
   } catch (err) {
-    if (err.name === 'CastError') {
+    if (err.name === 'ValidationError') {
       res.status(BAD_REQUEST).send({
         message:
           'invalid data passed to the methods for updating a user avatar ',
